@@ -1,0 +1,1046 @@
+# https://velog.io/@tngus0325/%EA%B3%A0%EA%B0%9D-%EC%9D%B4%ED%83%88-%EC%98%88%EB%B0%A9%EC%9D%84-%EC%9C%84%ED%95%9C-%EC%9D%B4%ED%83%88-%EA%B3%A0%EA%B0%9D-%EB%B6%84%EC%84%9D-%EB%B0%8F-%EB%8C%80%EC%95%88%EC%B1%85-%EC%88%98%EB%A6%BD
+![](https://velog.velcdn.com/images/tngus0325/post/9bbfe644-7eea-4781-9f73-73d87f59b5ca/image.jpg)
+## 1. 프로젝트 목표
+> - 은행 이용 고객들의 이탈을 최소화하고 고객 유지율을 향상시키기 위한 전략적인 대책을 마련
+> - 고객 특성 데이터를 분석하여 이탈 및 비이탈 고객들의 통계적 차이를 검토함으로써 문제의 원인을 파악하고 , 그에 따른 해결 방안을 제시
+
+최근 은행의 고객 이탈률이 증가하면서 다양한 문제들이 발생하고 있습니다. 이에 따라, 고객의 이탈을 최소화하고 고객 유지율을 증가시키기 위한 다각적인 접근이 필요합니다. 본 프로젝트의 목표는 이탈률 증가의 원인을 파악하고, 이를 바탕으로 문제점을 해결 및 보완하는 것입니다. 이 과정을 통해 고객 유지뿐만 아니라 신규 고객 유치에도 기여할 수 있는 전략을 수립하고자 합니다.
+
+
+---
+
+## 2. 데이터 설명 및 확인
+프로젝트에 사용된 데이터 세트는 총 165,034건의 데이터와 13개의 컬럼으로 구성되어 있습니다. 각 컬럼에 대한 정보는 다음과 같습니다.
+
+**Customer ID**: 각 고객의 고유 식별번호
+**Surname**: 고객의 성
+**Credit Score**: 고객의 신용점수
+**Geography**: 고객이 거주하는 국가
+**Gender**: 고객의 성별
+**Age**: 고객의 나이
+**Tenure**: 고객이 은행을 이용한 기간
+**Balance**: 고객의 계좌 잔액
+**NumOfProducts**: 고객이 이용하는 은행 상품의 수(ex. 예금,적금)
+**HasCrCard**: 신용카드 보유 여부
+**IsActiveMember**: 활성 회원 여부
+**EstimatedSalary**: 고객의 예상 연봉
+**Exited**: 고객 이탈 여부
+
+---
+## 3. 사용한 라이브러리
+
+pandas: 2.14
+numpy: 1.26.2
+matplotlib:3.8.0
+seaborn: 0.12.2
+scipy: 1.11.4
+sklearn: 1.3.2
+statsmodels: 0.14.0
+
+---
+
+## 4. 데이터 전처리 및 시각화
+### 전체 데이터의 기술 통계량
+
+
+|           |   mean   |   std   |   min   |   25%   |   50%   |   75%   |   max   |
+|-----------|----------|---------|---------|---------|---------|---------|---------|
+| 신용점수 |  656.4544 | 80.10334 |   350   |   597   |   659   |   710   |   850   |
+|    나이   |  38.12589 | 8.867205 |    18   |    32   |    37   |    42   |    92   |
+| 거래 기간 | 5.020353 | 2.806159 |    0    |    3    |    5    |    7    |    10   |
+| 계좌 잔액 | 55478.09 | 62817.66 |    0    |    0    |    0    | 119939.5 | 250898.1 |
+| 이용 제품 수 | 1.554455 | 0.547154 |    1    |    1    |    2    |    2    |    4    |
+| 카드 보유 여부 | 0.753954 | 0.430707 |    0    |    1    |    1    |    1    |    1    |
+| 활성 회원 여부 | 0.49777 | 0.499997 |    0    |    0    |    0    |    1    |    1    |
+| 예상 연봉 | 112574.8 | 50292.87 | 11.58 | 74637.57 | 117948 | 155152.5 | 199992.5 |
+| 이탈 여부 | 0.211599 | 0.408443 |    0    |    0    |    0    |    0    |    1    |
+
+
+<details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+  
+
+```python
+import pandas as pd
+file_path = '/content/train.csv'
+df = pd.read_csv(file_path)
+df.describe() 
+```
+ 
+</div>
+</details>
+
+1. 카드 보유 여부 (1: 보유 중, 0: 미보유)
+2. 활성 회원 여부 (1: 활성화된 고객, 0: 비활성화된 고객)
+3. 이탈 여부 (1: 이탈 고객, 0: 비이탈 고객)
+4. 데이터 세트에는 총 165,034개의 데이터가 포함되어 있으며, 결측치는 없습니다.
+
+<br/>
+
+### 50대 이탈자의 기술 통계량 (계좌 잔액이 0인 고객은 제외)
+
+|        |    Mean    |    Std     |   Min   |   25%   |   50%   |   75%   |   Max   |
+|--------|------------|------------|---------|---------|---------|---------|---------|
+| 신용점수  |  654.06  |   80.2   |   350   |   594   |   652   |   710   |   850   |
+| 거래 기간 |  4.86    |   2.83   |    0    |    2    |    5    |    7    |   10    |
+| 계좌 잔액  | 122428.91 | 22906.84 | 40685.92| 108127.07 |122314.5 |136526.03|238387.56|
+| 이용 제품 수 |  1.31    |   0.68   |    1    |    1    |    1    |    1    |    4    |
+| 카드 보유 여부 |  0.74    |   0.44   |    0    |    0    |    1    |    1    |    1    |
+| 활성 회원 여부 |  0.31    |   0.46   |    0    |    0    |    0    |    1    |    1    |
+| 예상 연봉   | 115362.19 | 50084.51 |  90.07  |76569.55 |121239.65|159793.16|199775.67|
+
+<details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+import pandas as pd
+file_path = '/content/train.csv'
+df = pd.read_csv(file_path)
+data = df[(df['Balance'] !=0) & (df['Age'] >= 50) & (df['Age'] < 60)]
+data.describe()
+
+```
+
+</div>
+</details>
+
+1. 나이의 표준 편차는 2.76으로, 주로 50대 중반에서 60대 초반 사이에 분포하는 것으로 나타납니다.
+2. 분석된 데이터는 총 4,387개이며, 결측치는 없습니다.
+
+<br/>
+
+### 전체 고객과 50대 이탈자의 데이터 평균 비교
+
+|           | **평균 값**            | **50대 이탈자** |
+|-----------|--------------------|--------------------------|
+| 신용점수  | 656.4 점         | 652.4 점      |
+| 나이      | 38 세           | 54 세     |
+| 거래 기간 | 5.02년             | 4.86년    |
+| **계좌 잔액**  | **$55,478.09**         | **$72,326.37** |
+| 이용 제품 수 | 1.55 개           | 1.31 개       |
+| 카드 보유 여부 | 75.40%         | 74.48%    |
+| **활성 회원 여부** | **49.78%**         | **31.31%**    |
+| 예상 연봉  | $112,574.80        | $115,075.88 |
+| 이탈 여부   | 21.16%            |       |
+
+### 시각화를 통한 데이터 분석
+
+
+#### 고객의 나이 분석
+![](https://velog.velcdn.com/images/tngus0325/post/f8c245d8-539f-4fa6-ab1f-b4efece7e2df/image.png)
+    
+ <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+import matplotlib as plt
+import seaborn as sns
+  
+plt.rcParams['font.family'] = 'NanumGothic' 
+plt.rcParams['axes.unicode_minus'] = False 
+df_e = df[df['Exited'] == 1]
+
+
+plt.figure(figsize=(12, 6))
+sns.histplot(df_e['Age'], bins=20)
+
+# 평균선 
+plt.axvline(data['Age'].mean(), color='#6829A6', linestyle='dashed', linewidth=2)
+
+# 세부 사항
+plt.title('이탈한 고객의 나이 분포', fontsize=15, fontweight='bold')
+plt.xlabel('나이', fontsize=13)
+plt.ylabel('고객 수', fontsize=13)
+plt.grid(True)
+
+# 그래프 표시
+plt.show()
+```
+
+</div>
+</details>
+
+   
+이탈한 고객들의 나이 분포를 분석한 결과, 30대 중반에서 40대 중반까지의 고객 수가 가장 많았습니다. 이후 저희는 연령대 별 이탈률을 더 정확히 알아보고자 추가적으로 분석을 해보았습니다.  
+
+ **연령대별 이탈률**
+   
+![](https://velog.velcdn.com/images/tngus0325/post/f9ce743e-68bc-41ea-b8f0-91c6d76a6902/image.png)
+   
+   <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+def create_age_group(age):
+    if age < 20:
+        return '10대'
+    elif age < 30:
+        return '20대'
+    elif age < 40:
+        return '30대'
+    elif age < 50:
+        return '40대'
+    elif age < 60:
+        return '50대'
+    elif age < 70:
+        return '60대'
+    else:
+        return '70대 이상'
+
+df['AgeGroup'] = df['Age'].apply(create_age_group)
+
+# 연령대별 이탈률
+AgeGroup = ['10대', '20대', '30대', '40대', '50대', '60대', '70대 이상']
+AgeExitRates = []
+
+for i in AgeGroup:
+    AgeExited = df.loc[(df['AgeGroup'] == i) & (df['Exited'] == 1) , :].shape[0]
+    AgeData = df.loc[df['AgeGroup'] == i].shape[0]
+    exit_rate = round(AgeExited / AgeData, 3) if AgeData > 0 else 0
+    AgeExitRates.append(exit_rate)
+  
+# 시각화
+plt.figure(figsize=(10, 6))
+plt.bar(AgeGroup, AgeExitRates, color='skyblue')
+plt.title('연령대별 고객 이탈률', fontsize=15, fontweight='bold')
+plt.xlabel('연령대', fontsize=13)
+plt.ylabel('이탈률', fontsize=13)
+plt.show()
+
+```
+
+</div>
+</details>
+
+
+연령대별 이탈률 조사 결과, 50대 고객이 가장 높은 이탈률을 보였습니다. 이는 현재 은행 서비스와 50대 고객들의 특성과 요구가 맞지 않을 수 있음을 시사합니다. 저희는 50대 고객들의 이탈률이 높은 이유에 대한 추가적인 분석과 전략 수립의 필요성을 느꼈습니다.
+
+#### 지역별 고객 분석
+![](https://velog.velcdn.com/images/tngus0325/post/b91d330b-34cb-4ad7-b941-c7e727a62134/image.png)
+   <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+fig, axs = plt.subplots(1, 2, figsize=(15, 6))
+
+# 전체 지역별 고객 분포
+sns.countplot(x='Geography', data=df, palette='Set2', ax=axs[0])
+axs[0].set_title('전체 지역별 고객 분포', fontsize=15, fontweight='bold')
+axs[0].set_xlabel('지역', fontsize=13)
+axs[0].set_ylabel('고객 수', fontsize=13)
+
+# 50대 고객의 지역별 분포
+sns.countplot(x='Geography', data=data, palette='cool', ax=axs[1])
+axs[1].set_title('50대 고객의 지역별 분포', fontsize=15, fontweight='bold')
+axs[1].set_xlabel('지역', fontsize=13)
+axs[1].set_ylabel('고객 수', fontsize=13)
+
+plt.tight_layout()
+plt.show
+```
+
+</div>
+</details>
+
+![](https://velog.velcdn.com/images/tngus0325/post/45422802-6d98-4eed-afe7-39902ff07948/image.png)
+   <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+labels = ['Exited', 'Stayed']
+france_sizes = [48.6, 51.4]  
+germany_sizes = [75.9, 24.1] 
+spain_sizes = [51.5, 48.5] 
+colors = ['#ff9999','#66b3ff'] 
+
+# 파이 차트 생성
+fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+# 프랑스 파이
+axs[0].pie(france_sizes, labels=['이탈', '유지'], colors=colors, autopct='%1.1f%%', startangle=140)
+axs[0].set_title('프랑스')
+
+# 독일 파이
+axs[1].pie(germany_sizes, labels=['이탈', '유지'], colors=colors, autopct='%1.1f%%', startangle=140)
+axs[1].set_title('독일')
+
+# 스페인 파이
+axs[2].pie(spain_sizes, labels=['이탈', '유지'], colors=colors, autopct='%1.1f%%', startangle=140)
+axs[2].set_title('스페인')
+
+plt.tight_layout()
+plt.show()
+```
+
+</div>
+</details>
+
+   그 다음으로는 50대 고객의 지역별 분포를 그래프로 시각화한 결과, 몇 가지 중요한 인사이트를 얻을 수 있었습니다.
+      
+ - **전체 고객 대비 50대 고객 분포**: 전체 고객 중에서는 프랑스 고객의 비중이 가장 높았으나, 50대 고객 중에서는 독일 고객이 가장 많은 비중을 차지하고 있었습니다.
+- **지역별 50대 이탈률**: 50대 고객 중 독일 지역에서의 이탈률이 75.9%로 매우 높게 나타났습니다. 이는 다른 지역에 비해 상당히 높은 수치입니다.
+
+ - 이러한 데이터는 독일 지역의 50대 고객에 대한 특별한 관심과 전략이 필요함을 시사합니다. 그리고 독일 지역에서 50대 고객의 이탈률을 감소시키기 위해, 해당 연령대를 타겟으로한 마케팅 또는 프로모션 전략을 고려할 필요가 있습니다.
+
+     
+     
+     
+     
+     
+
+![](https://velog.velcdn.com/images/tngus0325/post/9e2d1851-e3a2-489c-b0ee-2d6274725a1a/image.png)
+   <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+plt.figure(figsize=(16, 8))
+plt.subplot(1, 2, 1)
+plt.pie(active_counts, labels=['비활성', '활성'], autopct='%1.1f%%', colors=['skyblue', 'lightcoral'], startangle=140)
+plt.title('전체 고객의 활성 여부', fontsize=18, fontweight='bold')
+
+# 데이터 객체 정의 확인
+active_counts = data['IsActiveMember'].value_counts()
+
+# 50대 고객의 활성 파이 
+plt.subplot(1, 2, 2)
+plt.pie(active_counts, labels=['비활성', '활성'], autopct='%1.1f%%', colors=['skyblue', 'lightcoral'], startangle=140)
+plt.title('50대 고객의 활성 여부', fontsize=15, fontweight='bold')
+plt.tight_layout()
+plt.show()
+```
+
+</div>
+</details>
+     
+전체 고객 대비 50대 고객의 활성 비율 분석 결과, 50대 고객의 활성 비율이 전체 고객의 평균보다 낮게 나타났습니다. 이는 50대 고객들의 참여와 만족도를 높일 수 있는 전략의 필요성을 시사합니다.     
+
+
+---
+
+## 5. 주요 타겟 선정 및 심층분석
+
+### 1) 주요 타겟 선정
+- 전체적으로 프랑스에서 가입자가 가장 많았으나, 50대 고객은 독일에서 가장 많은 것으로 나타났습니다.
+- 독일의 50대 고객 이탈률이 상당히 높게 나타나 이에 대한 대응이 필요합니다.
+- 또한, 50대 가입자들의 활성화 비율이 낮은 것으로 관찰되어 이를 해결하기 위한 방안이 필요합니다.
+     
+### 2) 주요 타겟에 대한 세부 방향성
+
+#### (1) 이탈률이 높은 50대 전후 고객
+높은 이탈률을 보이고 있는 50대 전후의 고객이 직면한 상황 및 니즈를 분석하여 은퇴, 노후대비 상품을 개발하여 제공하면 이탈률 감소에 기여할 것으로 기대됩니다.
+     
+#### (2) 50대 고객이 많은 독일 지역
+독일 지역의 50대 고객 이탈률이 높은 점을 고려하여, 지역 특성에 맞는 혜택, 서비스, 캠페인을 제공하여 기존 회원 유지와 신규회원 유치를 목표로 합니다.
+     
+#### (3) 비활성화된 회원
+비활성화된 회원들을 위한 맞춤형 서비스를 제공하여 이들의 활성화를 유도하고 고객 유지율을 높일 수 있습니다.
+
+
+#### (4) 장기 이용고객과 우수 고객
+이들에게 특별한 우대 서비스 및 멤버십 혜택을 제공함으로써 고객 충성도를 높이고 유지율을 개선할 수 있습니다.
+
+### 3) 심층분석
+#### (1) 50대 고객 심층 분석 - 그래프 이용
+    
+>**가설1: 50대 고객(Age) 중 거래기간(Tenure)이 길수록, 이탈율이 낮다.**
+
+![](https://velog.velcdn.com/images/tngus0325/post/5aaa94a5-64bd-43a3-8c19-330f90feb851/image.png)
+   <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 데이터 불러오기 (예시 데이터)
+train_data = pd.read_csv('/kaggle/input/playground-series-s4e1/train.csv') # 데이터 파일 경로를 적절히 수정
+
+# 가설에 따른 분석
+plt.figure(figsize=(12, 6))
+
+# 50대 고객에 대한 데이터 필터링
+age_50s_data = train_data[(train_data['Age'] >= 50) & (train_data['Age'] < 60)]
+
+# 거래 기간(Tenure)에 따른 이탈률 시각화 (Violin Plot)
+sns.violinplot(x=age_50s_data['Exited'], y=age_50s_data['Tenure'])
+
+# 전체 표에 점선 추가
+plt.axhline(y=age_50s_data['Tenure'].mean(), color='gray', linestyle='--', label='Mean Tenure')
+plt.legend()  # 범례 표시
+
+plt.title('Tenure vs. Exited for Customers in their 50s', fontsize=15)
+plt.xlabel('Exited', fontsize=12)
+plt.ylabel('Tenure', fontsize=12)
+plt.xticks(ticks=[0, 1], labels=['Not Exited', 'Exited'])  # x축 눈금 설정
+
+# x축에 이탈률 표시
+ax2 = plt.twiny()
+ax2.set_xlim(0, 1)
+ax2.set_xticks([0.25, 0.75])
+ax2.set_xticklabels(['Low Churn Rate', 'High Churn Rate'])
+ax2.set_xlabel('Churn Rate')
+
+plt.yticks(ticks=range(int(age_50s_data['Tenure'].min()), int(age_50s_data['Tenure'].max()) + 1))  # y축 눈금 설정
+
+plt.show()
+
+```
+
+</div>
+</details>     
+
+  **ㄱ. Violin Plot을 활용한 Tenure과 Exited 관계 시각화**
+- 50대 고객 중 거래 기간(Tenure)에 따른 이탈 여부를 Violin Plot으로 시각화했습니다.
+
+- 이탈하지 않은 그룹과 이탈한 그룹 간의 거래 기간 분포를 비교하여 특징을 도출했습니다.
+<br/>
+
+**ㄴ.결과 관찰**
+- 6년 이상의 거래 기간을 기준으로 살펴보았을 때, 우측(Exited)의 수치가 좌측(Not Exited) 보다 상대적으로 낮은 것을 확인했습니다.
+
+- 이탈한 고객(Exited = 1)의 분포는 특정 거래 기간 범위에 더 집중된 모습을 보였습니다.
+- 반면, 이탈하지 않은 고객(Exited = 0)의 거래 기간 분포는 더 넓게 펼쳐져 있었으며, 다양한 기간을 포괄하고 있었습니다.
+<br/>
+
+
+**ㄷ.결과 해석**
+- 50대 고객 중에서 거래 기간이 긴 고객일수록 이탈 빈도가 낮아지는 경향이 확인되었습니다.
+
+- 거래 기간이 짧은 50대 고객의 경우, 이탈 가능성이 더 높음을 시사합니다.
+<br/>
+
+>**가설2: 50대 고객 중 신용점수(CreditScore)가 낮을수록, 이탈률이 높다**
+
+![](https://velog.velcdn.com/images/tngus0325/post/8de0cf39-4b35-4298-bd7a-4f5ffec4b1f6/image.png)
+   <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 데이터 불러오기 (예시 데이터)
+train_data = pd.read_csv('/kaggle/input/playground-series-s4e1/train.csv') # 데이터 파일 경로를 적절히 수정
+
+# 50대 고객에 대한 데이터 필터링
+age_50s_data = train_data[(train_data['Age'] >= 50) & (train_data['Age'] < 60)]
+
+# 이탈자와 비이탈자를 구분하여 데이터 분리
+exited_data = age_50s_data[age_50s_data['Exited'] == 1]
+not_exited_data = age_50s_data[age_50s_data['Exited'] == 0]
+
+# CreditScore 분포 시각화
+plt.figure(figsize=(12, 6))
+
+sns.histplot(exited_data['CreditScore'], label='Exited', color='red', alpha=0.5, kde=True)
+sns.histplot(not_exited_data['CreditScore'], label='Not Exited', color='blue', alpha=0.5, kde=True)
+
+plt.title('CreditScore Distribution for 50s Customers (Exited vs. Not Exited)', fontsize=15)
+plt.xlabel('CreditScore', fontsize=12)
+plt.ylabel('Density', fontsize=12)
+plt.legend()
+plt.show()
+
+
+```
+
+</div>
+</details>
+
+**ㄱ. 히스토그램과 KDE를 이용한 CredaitScore와 Exited 관계 시각화**
+- 50대 고객 중 신용 점수(CreditScore)에 따른 이탈 여부를 히스토그램과 KDE로 시각화했습니다.
+
+- 이탈하지 않은 그룹과 이탈한 그룹 간의 신용 점수 분포를 비교했습니다.
+<br/>
+
+
+**ㄴ. 결과 관찰**
+- 특히 신용점수가 600점 후반대인 50대 고객의 이탈률이 가장 높게 나타났습니다.
+- 이탈은 주로 500점대 후반대부터 700점대 초반의 50대 고객 중에서 발생했습니다.
+
+- 이탈률과 비이탈률이 가장 큰 차이를 보인 구간은 600점대 중반의 이용자였습니다.
+- 700점대 이상의 고객에서는 이탈률이 눈에 띄게 감소하는 경향을 보였습니다.
+<br/>
+
+
+**ㄷ. 결과 해석 (인사이트)**
+- 신용점수와 이탈률 사이에 뚜렷한 상관관계가 있다고 보기는 어렵습니다.
+- 50대 고객 중 신용점수가 낮을수록 이탈률이 높다고 단정 지을 수는 없습니다.
+- 그러나 600점대의 50대 이용자 중에서 이탈률과 비이탈률의 차이가 눈에 띄게 큰 것으로 나타났습니다.
+
+- 이는 600점대 신용점수를 가진 50대 이용자에 대한 이탈 예방 대책이 필요함을 시사합니다.
+<br/>
+
+
+>**가설3: 50대 고객 중 계좌잔액(Balance)이 낮을수록, 이탈률이 높다**
+
+![](https://velog.velcdn.com/images/tngus0325/post/841c565f-943e-491a-aeed-7c52fc76bebb/image.png)
+   <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 데이터 불러오기 (예시 데이터)
+# 파일 경로를 적절히 수정
+train_data = pd.read_csv('/kaggle/input/playground-series-s4e1/train.csv')
+
+# 50대 고객에 대한 데이터 필터링
+age_50s_data = train_data[(train_data['Age'] >= 50) & (train_data['Age'] < 60)]
+
+# 계좌잔액(Balance)에 따른 이탈률 시각화 (Violin Plot)
+plt.figure(figsize=(12, 6))
+sns.violinplot(x='Exited', y='Balance', data=age_50s_data, palette="muted", split=True)
+plt.axhline(y=age_50s_data['Balance'].median(), color='black', linestyle='--', label='Median Balance')
+plt.title('Balance vs. Exited for Customers in their 50s', fontsize=15)
+plt.xlabel('Exited', fontsize=12)
+plt.ylabel('Balance', fontsize=12)
+plt.xticks([0, 1], ['Not Exited', 'Exited'])
+plt.legend()
+plt.show()
+
+
+```
+
+</div>
+</details>
+
+     
+   **ㄱ. 히스토그램과 KDE를 활용한 Creditscore와 Exited 관계 시각화**
+- 50대 고객의 계좌잔액(Balance)에 따른 이탈 여부를 Violin Plot로 시각화했습니다.
+
+- 점선은 전체 데이터의 계좌 잔액 중간값을 나타냅니다.
+<br/>
+
+
+**ㄴ. 결과 관찰**
+- Not Exited(이탈하지 않은) 그룹과 Exited(이탈한) 그룹 간의 계좌 잔액 분포에 차이가 나타났습니다.
+- 특히, 100,000 ~ 150,000 달러의 계좌 잔액을 가진 50대 고객에서 이탈률이 비교적 높게 관찰되었습니다.
+
+- 낮은 계좌 잔액의 범위에서 보았을 때, 비이탈률이 상대적으로 높은 경향을 보였으나, 전반적으로 낮은 계좌 잔액의 50대 고객이 중앙값 이상의 잔액을 보유한 고객보다 더 높은 이탈률을 보였습니다.
+
+<br/>
+
+**ㄷ. 결과 해석 (인사이트)**
+- 계좌 잔액이 낮은 50대 고객이 이탈하는 경향이 나타납니다.
+
+- 이는 계좌 잔액이 낮은 고객에 대한 서비스 개선이나 타겟 마케팅이 필요함을 시사합니다.
+  
+- 이러한 고객들에게 맞춤형 금융 상품이나 서비스를 제공하여 이탈률을 감소시킬 수 있을 것입니다.
+<br/>
+
+
+>**50대 고객 심층 분석- 그래프 이용 결과 종합**
+
+**Tenure(거래 기간)**
+  - 거래 기간(Tenure)이 길수록 고객의 이탈률(Exited)이 낮아지는 경향이 관찰되었습니다.
+  - 특시 6년 이상의 거래 기간을 가진 고객들에서 더 낮은 이탈률을 보였습니다.
+  
+**Credit Score(신용 점수)**
+  - 신용 점수(Credit Score)의 분포는 전반적으로 비슷하게 나타났지만, 600점대 후반에서 700점대 후반의 신용 점수를 가진 고객들에서 높은 이탈률이 측정되었습니다.
+  - 이는 600점대의 신용 점수를 가진 고객들에게 집중적인 관리 및 지원이 필요함을 시사합니다.
+  
+**Balance(계좌 잔액)**
+  - 낮은 계좌 잔액을 가진 고객들이 이탈하는 경향이 나타났습니다.
+  - 특히 100,000 ~ 150,000 달러의 계좌 잔액을 가진 50대 고객에서 이탈률이 높게 나타났습니다.
+<br/>
+
+
+#### (2) 전체 고객 심층 분석- 2 sample t-test 이용
+**분석 방법**
+- 독립변수: CreditScore, Age, Tenure, Balance
+- 종속변수: Exited
+- 2 sample t-test 검정 방식을 이용하여, 종속변수에 대해 각 독립변수가 통계적으로 유의한 결과를 보이는지에 대해 검정하였습니다.
+- 표본의 크기가 크기 때문에 중심극한정리에 의해 정규성을 가진다고 가정했습니다.
+- Balance의 값이 0인 데이터는 제거 후 진행했습니다.
+- Exited가 0인 그룹과 1인 그룹의 샘플 차이가 많아 통일한 크기만큼 샘플링하여 진행했습니다.
+- 각 그룹은 모집단은 아니나, 샘플의 수가 충분히 크기 때문에 샘플들은 모집단과 같은 분포를 가지게됩니다.
+- ɑ=0.05
+**가설설정**
+  -  H0: Exited 그룹간의 종속변수(CreditScore, Age, Tenure, Balance)에 대한 평균은 같다.
+  - H1: Exited그룹간의 종속변수(CreditScore, Age, Tenure, Balance)에 대한 평균은 다르다.
+```python
+nonzero=train_data[train_data['Balance']!=0].reset_index(drop=True)
+df_0=nonzero.loc[nonzero['Exited']==0,['CreditScore','Age','Tenure','Balance']].reset_index()
+df_1=nonzero.loc[nonzero['Exited']==1,['CreditScore','Age','Tenure','Balance']].reset_index() 
+  ```
+#### **결과** 
+
+>**CreditScore**
+>>p≈0
+H0기각
+_Exited 그룹간의 CreditScore는 통계적으로 유의미한 차이가 존재함._
+ 
+ <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+t, p=stats.ttest_ind(df_0.CreditScore,df_1.CreditScore)
+t, p
+if p < 0.05:
+    print("H0 기각: 두 샘플 간에는 통계적으로 유의한 차이가 있습니다.")
+else:
+    print("H0 채택: 두 샘플 간에는 통계적으로 유의한 차이가 없습니다.")
+    
+print(round(p,5))
+
+```
+
+</div>
+</details> 
+
+ >**Age**
+>>p≈0
+H0기각
+_Exited 그룹간의 Age는 통계적으로 유의미한 차이가 존재함._
+
+ <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+t, p=stats.ttest_ind(df_0.Age,df_1.Age)
+t, p
+
+if p < 0.05:
+    print("H0 기각: 두 샘플 간에는 통계적으로 유의한 차이가 있습니다.")
+else:
+    print("H0 채택: 두 샘플 간에는 통계적으로 유의한 차이가 없습니다.")
+    
+print(round(p,5))
+
+```
+
+</div>
+</details>
+
+
+
+  
+>**Tenure**
+>>p≈0
+H0기각
+_Exited 그룹간의 Tenure는 통계적으로 유의미한 차이가 존재함._
+  
+ <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+t, p=stats.ttest_ind(df_0.Tenure,df_1.Tenure)
+t, p
+
+if p < 0.05:
+    print("H0 기각: 두 샘플 간에는 통계적으로 유의한 차이가 있습니다.")
+else:
+    print("H0 채택: 두 샘플 간에는 통계적으로 유의한 차이가 없습니다.")
+    
+print(round(p,5))
+
+```
+
+</div>
+</details>
+
+
+>**Balance**
+>>p≈0.675
+H0채택
+_Exited 그룹간의 Balance는 통계적으로 유의미한 차이가 존재하지않음._
+
+<br/>
+ <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+t, p=stats.ttest_ind(df_0.Balance,df_1.Balance)
+t, p
+
+if p < 0.05:
+    print("H0 기각: 두 샘플 간에는 통계적으로 유의한 차이가 있습니다.")
+else:
+    print("H0 채택: 두 샘플 간에는 통계적으로 유의한 차이가 없습니다.")
+print(round(p,5))
+
+```
+
+</div>
+</details>
+
+#### (3) 50대 고객 심층 분석- 2 sample t-test 이용
+**분석 방법**
+- 위와 거의 동일한 방법과 배경으로 검정을 실시했습니다.
+- 추가적으로 가장 높은 이탈율을 보이는 50대를 타겟으로 선정했습니다.
+- 50대 고객의 연령이 고정되어 있기 때문에, 종속변수에서 Age를 제외했습니다.
+- ɑ=0.05
+
+**가설 설정**
+ - H0: Exited 그룹간의 독립변수(CreditScore, Tenure, Balance)에 대한 평균은 같다.
+ - H1: Exited그룹간의 독립변수(CreditScore,  Tenure, Balance)에 대한 평균은 다르다.
+ 
+<details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+
+def categorize_age(age):
+    if age<20:
+        return '10s'
+    elif age<30:
+        return '20s'
+    elif age<40:
+        return '30s'
+    elif age<50:
+        return '40s'
+    elif age<60:
+        return '50s'
+    elif age<70:
+        return '60s'
+    else:
+        return '70+'
+
+train_data['Age_range']=train_data['Age'].apply(categorize_age)
+nonzero=train_data[train_data['Balance']!=0].reset_index(drop=True)
+df_0_50s=nonzero.loc[(nonzero['Exited']==0)&(nonzero['Age_range']=='50s'),['CreditScore','Tenure','Balance']].reset_index(drop=True)
+df_1_50s=nonzero.loc[(nonzero['Exited']==1)&(nonzero['Age_range']=='50s'),['CreditScore','Tenure','Balance']].reset_index(drop=True)
+
+
+```
+
+</div>
+</details>
+  
+
+#### 결과 
+>**CreditScore**
+>>p≈0.406
+H0채택
+_Exited 그룹간의 CreditScore는 통계적으로 유의미한 차이가 존재하지않음._
+  
+ <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+t, p=stats.ttest_ind(df_0_50s.CreditScore,df_1_50s.CreditScore)
+t, p
+
+if p < 0.05:
+    print("H0 기각: 두 샘플 간에는 통계적으로 유의한 차이가 있습니다.")
+else:
+    print("H0 채택: 두 샘플 간에는 통계적으로 유의한 차이가 없습니다.")
+    
+print(round(p,5))
+
+```
+
+</div>
+</details>
+   
+
+>**Tenure**
+>>p≈0.066
+H0채택
+_Exited 그룹간의 Tenure는 통계적으로 유의미한 차이가 존재하지않음._
+
+   <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+t, p=stats.ttest_ind(df_0_50s.Tenure,df_1_50s.Tenure)
+t, p
+
+if p < 0.05:
+    print("H0 기각: 두 샘플 간에는 통계적으로 유의한 차이가 있습니다.")
+else:
+    print("H0 채택: 두 샘플 간에는 통계적으로 유의한 차이가 없습니다.")
+    
+print(round(p,5))
+
+```
+
+</div>
+</details>
+     
+
+>**Balance**
+>>p≈0.305
+H0채택
+_Exited 그룹간의 Balance는 통계적으로 유의미한 차이가 존재하지않음._
+  
+ <details>
+<summary><span style = "color: #557FFF">코드</summary>
+<div markdown="1">
+
+```python
+t, p=stats.ttest_ind(df_0_50s.Balance,df_1_50s.Balance)
+t, p
+
+if p < 0.05:
+    print("H0 기각: 두 샘플 간에는 통계적으로 유의한 차이가 있습니다.")
+else:
+    print("H0 채택: 두 샘플 간에는 통계적으로 유의한 차이가 없습니다.")
+    
+print(round(p,5))
+```
+
+</div>
+</details>
+   
+  
+
+#### 결과 종합
+**전체 고객 분석 결과**
+- **CreditScore, Age, Tenure**는 고객 이탈 여부에 통계적으로 유의미한 차이를 보였습니다. 이들 변수는 고객 이탈 여부를 예측하는 데 중요한 요소로 작용합니다.
+- **Balance**는 고객 이탈 여부에 통계적으로 유의미한 차이를 보이지 않았습니다. 이는 계좌 잔액 자체가 고객 이탈 여부를 결정짓는 주요 요인은 아닐 수 있음을 나타냅니다.
+  
+**50대 고객 심층 분석 결과**
+- 50대 고객을 대상으로 한 심층 분석에서는 **CreditScore, Tenure, Balance**가 이탈 여부에 통계적으로 유의미한 차이를 보이지 않았습니다.
+- 이 결과는 50대 고객의 이탈 여부를 결정하는 요인이 다른 변수나 외부 환경에 의해 더 크게 영향을 받을 가능성이 있음을 시사합니다.
+<br/>
+
+
+### 4) 교차분석
+**분석 방법**
+- 독립변수: HasCrCard, IsActiveMember, Gender, BalLevel(Balance Level)
+- 종속변수: Exited
+- 범주형 변수간에 Exited외 상관관계를 찾고자 교차분석을 수행합니다.
+
+**가설설정**
+ - H0: Exited 와 독립변수(HasCrCard,IsActiveMember,Gender,BelLevel)는 서로 독립이다.
+ - H1: Exited 와 독립변수(HasCrCard,IsActiveMember,Gender,BelLevel)는 서로 독립이 아니다.(상관관계가 있다.)
+```python
+col = ['HasCrCard', 'IsActiveMember', 'Gender_Male','BalLevel_중간소득', 'BalLevel_고소득']
+for i in col: 
+    cross_data = pd.crosstab(index = dy5_dm_sc['Exited'], columns = dy5_dm_sc[i], 
+                             margins=False)
+
+    from scipy.stats import chi2_contingency
+    chi2, p, dof, expected = chi2_contingency(cross_data)
+    msg = 'Test Statistic: {}\np-value: {}\nDegree of Freedom: {}'
+    print(f'<Exited and {i}>')
+    print(msg.format(chi2, p, dof))
+    if p < 0.05:
+        print('dependent')
+    else:
+        print('independent')
+    print(expected)
+    print('---------------------------')
+```
+
+   
+#### 결과
+>**HasCrCard**
+>>p≈0.061
+H0 채택
+_Exited와 HasCrCard는 서로 독립이다._
+ 
+  <details>
+<summary><span style = "color: #557FFF">결과</summary>
+<div markdown="1">
+
+Test Statistic: 3.512031760205843
+p-value: 0.06092469740333798
+Degree of Freedom: 1
+independent
+[[ 648.71940431 1746.28059569]
+ [1188.28059569 3198.71940431]]
+
+
+</div>
+</details>
+
+    
+>**IsActiveMember**
+>>p≈0.00
+H0 기각
+_Exited와 IsActiveMember는 서로 독립이 아니다._
+    
+ <details>
+<summary><span style = "color: #557FFF">결과</summary>
+<div markdown="1">
+
+  Test Statistic: 1120.6478183974805
+p-value: 1.0745755752999843e-245
+Degree of Freedom: 1
+dependent
+[[1286.49144795 1108.50855205]
+ [2356.50855205 2030.49144795]]
+
+
+</div>
+</details>
+   
+
+>**Gender**
+>>p≈0.00
+H0 기각
+_Exited와 Genderr는 서로 독립이 아니다._
+
+  <details>
+<summary><span style = "color: #557FFF">결과</summary>
+<div markdown="1">
+
+Test Statistic: 125.66086885425042
+p-value: 3.647868576993693e-29
+Degree of Freedom: 1
+dependent
+[[1251.88366264 1143.11633736]
+ [2293.11633736 2093.88366264]]
+
+
+</div>
+</details>
+    
+
+>**BalLevel_mid**
+>>p≈0.00
+H0 기각
+_Exited와 BalLevel_mid는 서로 독립이 아니다_
+
+  <details>
+<summary><span style = "color: #557FFF">결과</summary>
+<div markdown="1">
+
+Test Statistic: 30.22743266684472
+p-value: 3.842361009899681e-08
+Degree of Freedom: 1
+dependent
+[[ 221.77233854 2173.22766146]
+
+ [ 406.22766146 3980.77233854]]
+
+
+</div>
+</details>
+    
+
+>**BalLevel-high**
+>>p≈0.00
+H0 기각
+_Exited와 BalLevel_mid는 서로 독립이 아니다._
+
+  <details>
+<summary><span style = "color: #557FFF">결과</summary>
+<div markdown="1">
+
+Test Statistic: 17.71479217409669
+p-value: 2.5662326649920104e-05
+Degree of Freedom: 1
+dependent
+[[2306.71483338   88.28516662]
+ [4225.28516662  161.71483338]]
+
+
+</div>
+</details>
+      
+
+#### ㄴ. 결과 종합
+- ** HasCrCard (신용카드 보유 여부)**: Exited (고객 이탈 여부)와 독립성을 검정한 결과, HasCrCard는 Exited와 상관관계가 나타나지 않았습니다. 이는 신용카드 보유 여부가 고객의 이탈 결정에 직접적인 영향을 미치지 않음을 의미합니다.
+- **다른 범주형 변수들 (IsActiveMember, Gender, BalLevel)**: 이들 변수는 Exited와 독립관계가 아니라는 결과가 나타났습니다. 즉, 이 변수들은 고객의 이탈 여부와 어느 정도 상관관계가 있는 것으로 해석됩니다.
+
+    </br>
+
+### 5) 50대 고객 회귀분석(OLS)
+**분석 방법**
+- 독립변수: Age, Tenure, CreditScore
+- 종속변수: NumOfProducts
+- 50대 고객 데이터에 대한 회귀분석을 통해, 이용 상품 수에 영향을 미치는 요인들을 파악하려고 했습니다.    
+```python
+# NumOfProducts에 대해 회귀분석
+ # 종속변수 재정의
+X1 = dy5_dm_sc[['Age', 'BalLevel_중간소득','BalLevel_고소득',
+               'Tenure', 'CreditScore']]
+y = dy5_dm_sc['NumOfProducts']
+  
+# 회귀분석
+import statsmodels.api as sm
+
+X1_ad = sm.add_constant(X1)
+model = sm.OLS(y, X1_ad).fit()
+print(model.summary())
+  
+
+```
+![](https://velog.velcdn.com/images/tngus0325/post/69af77c3-c396-42b3-ba11-5412270f7816/image.png)
+
+#### 결과
+- **P-value**: 대부분의 독립변수들은 유의미한 P-value를 보이지 않았습니다. 유의미한 P-value를 보인 변수는 const (상수항)와 BalLevel_mid (중간 계좌 잔액 레벨) 뿐이었습니다.
+- **R-squared**: 0.001로, 이 모델이 종속변수의 변동을 거의 설명하지 못하고 모델의 신뢰도가 매우 낮다는 것을 의미합니다.
+---
+
+## 6. 최종 문제점 및 해결책 제시
+### 문제점
+- **고객 이탈로 인한 신뢰도 하락 및 수익 감소**: 고객 이탈은 은행의 신뢰도와 재정적 안정성에 영향을 미칩니다.
+- **활성화된 고객 부족**: 신규 상품 및 이벤트의 성공 가능성 감소, 은행의 장기적 성장 전략에 부정적 영향을 줄 수 있습니다.
+- **50대 고객 이탈의 영향**: 높은 잔액과 평균연봉을 가진 50대 고객 이탈은 자금 감소 및 경쟁력 저하로 이어질 수 있습니다.
+
+### 해결방안
+#### 1) 국가별 특색을 고려한 마케팅
+- **예**: 독일 고객을 위한 맥주 캐시백 혜택 제공할 수 있습니다.
+
+- **예상 효과**: 고객 참여 유발, 브랜드 충성도 증가, 경쟁사 대비 좋은 인식 확보
+
+
+#### 2) 지역 특색 활용
+- **예**: 지역사회와 협력을 통한 축제를 개최할 수 있습니다.
+
+- **예상 효과**: 고객 참여 유발, 브랜드 이미지 강화, 고객 충성도 및 장기적 관계 구축
+
+
+#### 3) 낮은 잔액의 고객들을 위한 저렴하고 간편한 은행 서비스 제공
+- **예**: 잔액이 낮은 고객들의 이탈 비율이 높기 때문에 금전적인 부담을 최소화 시킵니다.
+
+- **예상 효과**: 금전적 부담 감소, 은행 서비스 접근성 증가, 신규 고객 유치
+
+
+#### 4) 예금 이자를 높인 상품 출시
+- 예: 잔액에 상관없이 혜택을 받을 수 있는 예금 이자를 높인 상품을 출시합니다.
+
+- **예상 효과**: 이탈률 감소, 유지율 향상, 경쟁 은행과의 우위 확보
+
+
+#### 5) 은퇴 및 연금 관리 컨설팅 제공
+- 50대 전후의 고객들을 위한 맞춤 서비스를 제공합니다.
+
+- **예상 효과**: 고객의 금전적 불안감 감소, 신뢰 구축, 고객 충성도 및 은행 신뢰성 향상
+   
+---
+## 7. 프로젝트 평가
+
+
+
+### 아쉬운점 
+- 프로젝트 초기에 데이터 분석의 방향성과 계획을 명확히 수립하지 않아서 작업시간이 많이 소요되었습니다. 이로 인해 다양한 변수들을 충분히 분석하고 검증하는데 시간적인 부족함이 느껴져서 아쉬웠습니다.
+
+- 이탈률이 높은 50대 고객을 분석 대상으로 선정했으나, 이들과 밀접하게 관련된 변수를 찾아내지 못한 부분과 너무 이탈률에만 초점을 맞춘 것에 아쉬움이 있습니다.
+
+### 느낀점
+- 팀원들과 협동과 의사소통을 통해 프로젝트를 해결하려는 과정이 좋았습니다. 배운 것들을 복습하고 이해하는 좋은 성장과정이었습니다.
+
+- 작은 프로젝트지만 이러한 경험을 하는것이 이 후 프로젝트에도 도움이 될 것으로 기대가 됩니다.
+
+---
+    
+ >멀티캠퍼스 데이터 분석&엔지니어 취업캠프(Python) 34회차
+ 세미 프로젝트 5조: 김수현, 나한울, 정혜원, 한대희, 황유진  
+   kaggle: https://www.kaggle.com/code/yellayujin/bank-churn-analysis-eda-t-test-and-chi-2-test
